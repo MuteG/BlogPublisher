@@ -46,7 +46,8 @@ namespace BlogPublisher.Domain
                 if (dict.ContainsKey(file))
                 {
                     var fileHash = GetHash(file);
-                    if (string.CompareOrdinal(dict[file], fileHash) != 0)
+                    if (string.CompareOrdinal(dict[file], fileHash) != 0 ||
+                        !setting.PublishChangedFileOnly)
                     {
                         dict[file] = fileHash;
                         MoveToPublishDirectory(file);

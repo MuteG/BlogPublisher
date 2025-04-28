@@ -3,8 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:model="clr-namespace:BlogPublisher.ViewModel"
         mc:Ignorable="d"
-        Title="博客发布工具" Height="350" Width="700" WindowStartupLocation="CenterScreen">
+        Title="博客发布工具" Height="350" Width="700" WindowStartupLocation="CenterScreen"
+        Loaded="Window_Loaded">
+    <Window.DataContext>
+        <model:MainModel/>
+    </Window.DataContext>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition/>
@@ -23,34 +28,38 @@
                Height="30" Content="密钥文件"/>
         <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                  VerticalContentAlignment="Center" TextWrapping="NoWrap" Margin="10, 0, 10, 0" IsReadOnly="True"
-                 Height="30" Name="TxtAccessKeyFile" />
+                 Height="30" Name="TxtAccessKeyFile" Text="{Binding Setting.AccessKeyFile}" />
         <Button Grid.Row="0" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center"
                 Height="30" Width="75" Name="BtnAccessKeyFile" Content="选择" Click="BtnAccessKeyFile_OnClick"/>
         <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center"
                Height="30" Content="本地博客文件夹"/>
         <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                  VerticalContentAlignment="Center" TextWrapping="NoWrap" Margin="10, 0, 10, 0" IsReadOnly="True"
-                 Height="30" Name="TxtLocalBlogDirectory" />
+                 Height="30" Name="TxtLocalBlogDirectory" Text="{Binding Setting.LocalBlogDirectory}" />
         <Button Grid.Row="1" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center"
                 Height="30" Width="75" Name="BtnLocalBlogDirectory" Content="选择" Click="BtnLocalBlogDirectory_OnClick"/>
         <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center"
                Height="30" Content="S3区域"/>
         <TextBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                  VerticalContentAlignment="Center" TextWrapping="NoWrap" Margin="10, 0, 10, 0"
-                 Height="30" Name="TxtS3Region" />
+                 Height="30" Name="TxtS3Region" Text="{Binding Setting.S3Region}" />
         <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center"
                Height="30" Content="S3存储桶名称"/>
         <TextBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                  VerticalContentAlignment="Center" TextWrapping="NoWrap" Margin="10, 0, 10, 0"
-                 Height="30" Name="TxtS3BucketName" />
+                 Height="30" Name="TxtS3BucketName" Text="{Binding Setting.S3BucketName}" />
         <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center"
                Height="30" Content="CloudFront分配ID"/>
         <TextBox Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                  VerticalContentAlignment="Center" TextWrapping="NoWrap" Margin="10, 0, 10, 0"
-                 Height="30" Name="TxtCloudFrontDistributionId" />
+                 Height="30" Name="TxtCloudFrontDistributionId" Text="{Binding Setting.CloudFrontDistributionId}" />
         <Button Grid.Row="5" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10, 0, 10, 0"
                 Height="30" Width="75" Name="BtnPublish" Content="发布" Click="BtnPublish_OnClick"/>
         <Button Grid.Row="5" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center"
                 Height="30" Width="75" Name="BtnCancel" Content="取消" Click="BtnCancel_OnClick"/>
+        <CheckBox x:Name="ChkPublishChangedFileOnly" Grid.Column="1" Grid.Row="5"
+                  HorizontalAlignment="Left" VerticalAlignment="Center"
+                  Width="124" Height="15" Margin="261,0,0,0"
+                  Content="只发布变更的文件" IsChecked="{Binding Setting.PublishChangedFileOnly}"/>
     </Grid>
 </Window>

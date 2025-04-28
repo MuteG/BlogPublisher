@@ -27,13 +27,13 @@ namespace BlogPublisher.Domain
             paths.Quantity = paths.Items.Count;
             var batch = new InvalidationBatch(paths, DateTime.Now.ToString("yyyyMMddHHmmss"));
             var request = new CreateInvalidationRequest(_setting.CloudFrontDistributionId, batch);
-            return _client.CreateInvalidation(request);
+            return _client.CreateInvalidationAsync(request).Result;
         }
 
         private List<string> GetInvalidateFiles()
         {
             return Directory.GetFiles(_setting.PublishDirectory, "*.html", SearchOption.AllDirectories)
-                .Select(f => f.Substring(_setting.PublishDirectory.Length))
+                .Select(f => f.Substring(_setting.PublishDirectory.Length).Replace('\\', '/'))
                 .ToList();
         }
     }

@@ -1,39 +1,33 @@
 using System;
 using System.ComponentModel;
-using System.Configuration;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Amazon.Runtime;
 using BlogPublisher.Annotations;
+using YamlDotNet.Serialization;
 
 namespace BlogPublisher.Domain
 {
     public sealed class Setting : INotifyPropertyChanged
     {
-        private readonly Configuration _configuration;
+        private static readonly string _configFile;
         private string _accessKeyFile;
         private string _localBlogDirectory;
         private string _s3Region;
         private string _s3BucketName;
         private string _cloudFrontDistributionId;
+        private bool _publishChangedFileOnly;
         private static Setting _instance;
 
-        private Setting()
+        static Setting()
         {
-            var configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                @"BlogPublisher\app.config");
-            var map = new ExeConfigurationFileMap
-            {
-                ExeConfigFilename = configFile
-            };
-            
-            _configuration = ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
-            AccessKeyFile = _configuration.AppSettings.Settings["AccessKeyFile"]?.Value;
-            LocalBlogDirectory = _configuration.AppSettings.Settings["LocalBlogDirectory"]?.Value;
-            S3Region = _configuration.AppSettings.Settings["S3Region"]?.Value;
-            S3BucketName = _configuration.AppSettings.Settings["S3BucketName"]?.Value;
-            CloudFrontDistributionId = _configuration.AppSettings.Settings["CloudFrontDistributionId"]?.Value;
+            _configFile = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                @"BlogPublisher\app.yml");
         }
+
+        #region 设定项
 
         /// <summary>
         /// 密钥文件
@@ -144,6 +138,18 @@ namespace BlogPublisher.Domain
             }
         }
 
+        public bool PublishChangedFileOnly
+        {
+            get => _publishChangedFileOnly;
+            set
+            {
+                _publishChangedFileOnly = value;
+                OnPropertyChanged();
+            }
+        }
+
+        #endregion
+
         public event PropertyChangedEventHandler PropertyChanged;
         
         public static Setting GetInstance()
@@ -151,6 +157,7 @@ namespace BlogPublisher.Domain
             if (_instance == null)
             {
                 _instance = new Setting();
+                _instance.DeserializeSetting();
             }
             
             return _instance;
@@ -158,19 +165,49 @@ namespace BlogPublisher.Domain
 
         public void Save()
         {
-            var folder = Path.GetDirectoryName(_configuration.FilePath);
+            var folder = Path.GetDirectoryName(_configFile);
             if (folder != null && !Directory.Exists(folder))
             {
                 Directory.CreateDirectory(folder);
             }
             
-            _configuration.AppSettings.Settings.Clear();
-            _configuration.AppSettings.Settings.Add("AccessKeyFile", AccessKeyFile);
-            _configuration.AppSettings.Settings.Add("LocalBlogDirectory", LocalBlogDirectory);
-            _configuration.AppSettings.Settings.Add("S3Region", S3Region);
-            _configuration.AppSettings.Settings.Add("S3BucketName", S3BucketName);
-            _configuration.AppSettings.Settings.Add("CloudFrontDistributionId", CloudFrontDistributionId);
-            _configuration.Save(ConfigurationSaveMode.Modified);
+            SerializeSetting(this, _configFile);
+        }
+
+        private void DeserializeSetting()
+        {
+            var setting = DeserializeSetting<Setting>(_configFile);
+            AccessKeyFile = setting.AccessKeyFile;
+            LocalBlogDirectory = setting.LocalBlogDirectory;
+            S3Region = setting.S3Region;
+            S3BucketName = setting.S3BucketName;
+            CloudFrontDistributionId = setting.CloudFrontDistributionId;
+            PublishChangedFileOnly = setting.PublishChangedFileOnly;
+        }
+
+        private TSetting DeserializeSetting<TSetting>(string settingFile)
+            where TSetting : class
+        {
+            if (File.Exists(settingFile))
+            {
+                var deserializer = new DeserializerBuilder()
+                    .Build();
+                using var stream = new FileStream(settingFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(stream, Encoding.UTF8);
+                var setting = deserializer.Deserialize<TSetting>(reader);
+                return setting;
+            }
+
+            return Activator.CreateInstance<TSetting>();
+        }
+
+        private void SerializeSetting(object setting, string settingFile)
+        {
+            var serializer = new SerializerBuilder()
+                .Build();
+            using var stream = new FileStream(settingFile, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
+            using var writer = new StreamWriter(stream, Encoding.UTF8);
+            serializer.Serialize(writer, setting);
         }
 
         [NotifyPropertyChangedInvocator]
