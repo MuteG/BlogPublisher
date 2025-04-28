@@ -32,8 +32,8 @@ namespace BlogPublisher.Domain
 
         private List<string> GetInvalidateFiles()
         {
-            return Directory.GetFiles(_setting.PublishDirectory, "*.html")
-                .Select(f => "/" + Path.GetFileName(f))
+            return Directory.GetFiles(_setting.PublishDirectory, "*.html", SearchOption.AllDirectories)
+                .Select(f => f.Substring(_setting.PublishDirectory.Length))
                 .ToList();
         }
     }
