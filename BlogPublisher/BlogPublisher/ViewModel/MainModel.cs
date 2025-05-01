@@ -3,6 +3,7 @@ using NLog;
 using System;
 using System.Windows;
 using System.Windows.Forms;
+using BlogPublisher.View;
 using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
@@ -44,7 +45,38 @@ namespace BlogPublisher.ViewModel
             try
             {
                 _setting.Save();
-                _publisher.Publish();
+                if (_setting.PreviewBeforePublish)
+                {
+                    var files = _publisher.Judge();
+                    if (files.Count == 0)
+                    {
+                        MessageBox.Show("没有发现需要发布的文件！");
+                        return;
+                    }
+                    else
+                    {
+                        var preview = new PublishPreviewWindow
+                        {
+                            DataContext = new PublishPreviewModel
+                            {
+                                PublishPaths = string.Join(Environment.NewLine, files.GetInvalidationPath())
+                            }
+                        };
+                        if (preview.ShowDialog()!.Value)
+                        {
+                            _publisher.Publish(files);
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    _publisher.Publish();
+                }
+
                 MessageBox.Show("发布完毕。", "成功",
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }

@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Amazon;
 using Amazon.CloudFront;
 using Amazon.CloudFront.Model;
@@ -20,21 +17,14 @@ namespace BlogPublisher.Domain
             _client = new AmazonCloudFrontClient(_setting.Credentials, endpoint);
         }
 
-        public CreateInvalidationResponse Invalid()
+        public CreateInvalidationResponse Invalid(PublishFileCollection files)
         {
             var paths = new Paths();
-            paths.Items.AddRange(GetInvalidateFiles());
+            paths.Items.AddRange(files.GetInvalidationPath());
             paths.Quantity = paths.Items.Count;
             var batch = new InvalidationBatch(paths, DateTime.Now.ToString("yyyyMMddHHmmss"));
             var request = new CreateInvalidationRequest(_setting.CloudFrontDistributionId, batch);
             return _client.CreateInvalidationAsync(request).Result;
-        }
-
-        private List<string> GetInvalidateFiles()
-        {
-            return Directory.GetFiles(_setting.PublishDirectory, "*.html", SearchOption.AllDirectories)
-                .Select(f => f.Substring(_setting.PublishDirectory.Length).Replace('\\', '/'))
-                .ToList();
         }
     }
 }

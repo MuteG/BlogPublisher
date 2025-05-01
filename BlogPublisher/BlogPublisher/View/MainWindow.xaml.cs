@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using BlogPublisher.ViewModel;
 
-namespace BlogPublisher
+namespace BlogPublisher.View
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

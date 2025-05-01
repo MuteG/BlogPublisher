@@ -17,7 +17,8 @@ namespace BlogPublisher.Domain
         private string _s3Region;
         private string _s3BucketName;
         private string _cloudFrontDistributionId;
-        private bool _publishChangedFileOnly;
+        private bool _publishChangedFileOnly = true;
+        private bool _previewBeforePublish = false;
         private static Setting _instance;
 
         static Setting()
@@ -32,6 +33,7 @@ namespace BlogPublisher.Domain
         /// <summary>
         /// 密钥文件
         /// </summary>
+        [YamlMember]
         public string AccessKeyFile
         {
             get => _accessKeyFile;
@@ -46,6 +48,7 @@ namespace BlogPublisher.Domain
         /// <summary>
         /// 本地博客文件夹
         /// </summary>
+        [YamlMember]
         public string LocalBlogDirectory
         {
             get => _localBlogDirectory;
@@ -60,6 +63,7 @@ namespace BlogPublisher.Domain
         /// <summary>
         /// S3区域
         /// </summary>
+        [YamlMember]
         public string S3Region
         {
             get => _s3Region;
@@ -74,6 +78,7 @@ namespace BlogPublisher.Domain
         /// <summary>
         /// S3存储桶名称
         /// </summary>
+        [YamlMember]
         public string S3BucketName
         {
             get => _s3BucketName;
@@ -88,6 +93,7 @@ namespace BlogPublisher.Domain
         /// <summary>
         /// CloudFront分配ID
         /// </summary>
+        [YamlMember]
         public string CloudFrontDistributionId
         {
             get => _cloudFrontDistributionId;
@@ -99,6 +105,7 @@ namespace BlogPublisher.Domain
             }
         }
 
+        [YamlIgnore]
         public BasicAWSCredentials Credentials
         {
             get
@@ -121,6 +128,7 @@ namespace BlogPublisher.Domain
             }
         }
 
+        [YamlIgnore]
         public string PublishDirectory
         {
             get
@@ -129,6 +137,7 @@ namespace BlogPublisher.Domain
             }
         }
 
+        [YamlIgnore]
         public string PublishFileHashDictionary
         {
             get
@@ -138,6 +147,7 @@ namespace BlogPublisher.Domain
             }
         }
 
+        [YamlMember]
         public bool PublishChangedFileOnly
         {
             get => _publishChangedFileOnly;
@@ -146,6 +156,17 @@ namespace BlogPublisher.Domain
                 _publishChangedFileOnly = value;
                 OnPropertyChanged();
             }
+        }
+
+        [YamlMember]
+        public bool PreviewBeforePublish
+        {
+            get => _previewBeforePublish;
+            set 
+            {
+                _previewBeforePublish = value;
+                OnPropertyChanged();
+            }   
         }
 
         #endregion
