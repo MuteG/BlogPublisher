@@ -1,11 +1,11 @@
-﻿using BlogPublisher.Domain;
-using NLog;
 using System;
-using System.Windows;
-using System.Windows.Forms;
+using System.IO;
+using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
+using BlogPublisher.Domain;
 using BlogPublisher.View;
-using MessageBox = System.Windows.MessageBox;
-using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using NLog;
 
 namespace BlogPublisher.ViewModel
 {
@@ -22,25 +22,60 @@ namespace BlogPublisher.ViewModel
             InitLog();
         }
 
-        public void SelectAccessKey()
+        public async Task SelectAccessKeyAsync(Window parent)
         {
-            var openFileDialog = new OpenFileDialog {Filter = "密钥文件|*.csv"};
-            if (openFileDialog.ShowDialog() == true)
+            var topLevel = TopLevel.GetTopLevel(parent);
+            if (topLevel == null) return;
+
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                _setting.AccessKeyFile = openFileDialog.FileName;
+                Title = "选择密钥文件",
+                AllowMultiple = false,
+                FileTypeFilter = new[]
+                {
+                    new FilePickerFileType("密钥文件 (*.csv)")
+                    {
+                        Patterns = new[] { "*.csv" }
+                    },
+                    new FilePickerFileType("所有文件 (*.*)")
+                    {
+                        Patterns = new[] { "*.*" }
+                    }
+                }
+            });
+
+            if (files.Count > 0)
+            {
+                var path = files[0].TryGetLocalPath();
+                if (!string.IsNullOrEmpty(path))
+                {
+                    _setting.AccessKeyFile = path;
+                }
             }
         }
 
-        public void SelectLocalBlogDirectory()
+        public async Task SelectLocalBlogDirectoryAsync(Window parent)
         {
-            using var folderBrowserDialog = new FolderBrowserDialog();
-            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+            var topLevel = TopLevel.GetTopLevel(parent);
+            if (topLevel == null) return;
+
+            var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                _setting.LocalBlogDirectory = folderBrowserDialog.SelectedPath;
+                Title = "选择本地博客文件夹",
+                AllowMultiple = false
+            });
+
+            if (folders.Count > 0)
+            {
+                var path = folders[0].TryGetLocalPath();
+                if (!string.IsNullOrEmpty(path))
+                {
+                    _setting.LocalBlogDirectory = path;
+                }
             }
         }
 
-        public void Publish()
+        public async Task<bool> PublishAsync(Window parent)
         {
             try
             {
@@ -50,8 +85,8 @@ namespace BlogPublisher.ViewModel
                     var files = _publisher.Judge();
                     if (files.Count == 0)
                     {
-                        MessageBox.Show("没有发现需要发布的文件！");
-                        return;
+                        await MessageBoxWindow.ShowAsync(parent, "没有发现需要发布的文件！", "提示");
+                        return false;
                     }
                     else
                     {
@@ -62,13 +97,14 @@ namespace BlogPublisher.ViewModel
                                 PublishPaths = string.Join(Environment.NewLine, files.GetInvalidationPath())
                             }
                         };
-                        if (preview.ShowDialog()!.Value)
+                        var result = await preview.ShowDialog<bool?>(parent);
+                        if (result == true)
                         {
                             _publisher.Publish(files);
                         }
                         else
                         {
-                            return;
+                            return false;
                         }
                     }
                 }
@@ -77,14 +113,14 @@ namespace BlogPublisher.ViewModel
                     _publisher.Publish();
                 }
 
-                MessageBox.Show("发布完毕。", "成功",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                await MessageBoxWindow.ShowAsync(parent, "发布完毕。", "成功");
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex);
-                MessageBox.Show("发布失败，请查看日志文件获取详细信息。", "失败",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                await MessageBoxWindow.ShowAsync(parent, "发布失败，请查看日志文件获取详细信息。", "失败");
+                return false;
             }
         }
 
@@ -92,8 +128,14 @@ namespace BlogPublisher.ViewModel
         {
             var config = new NLog.Config.LoggingConfiguration();
 
+            var logDirectory = "Log";
+            if (!Directory.Exists(logDirectory))
+            {
+                Directory.CreateDirectory(logDirectory);
+            }
+
             // Targets where to log to: File and Console
-            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = $@"Log\{DateTime.Now:yyyyMMdd}.log" };
+            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = Path.Combine(logDirectory, $"{DateTime.Now:yyyyMMdd}.log") };
             
             // Rules for mapping loggers to targets            
             config.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);

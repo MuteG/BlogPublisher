@@ -25,7 +25,8 @@ namespace BlogPublisher.Domain
         {
             _configFile = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                @"BlogPublisher\app.yml");
+                "BlogPublisher",
+                "app.yml");
         }
 
         #region 设定项
@@ -133,7 +134,7 @@ namespace BlogPublisher.Domain
         {
             get
             {
-                return Path.Combine(Path.GetTempPath(), $@"BlogPublisher\Publish");
+                return Path.Combine(Path.GetTempPath(), "BlogPublisher", "Publish");
             }
         }
 
@@ -143,7 +144,8 @@ namespace BlogPublisher.Domain
             get
             {
                 return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    @"BlogPublisher\hash.dic");
+                    "BlogPublisher",
+                    "hash.dic");
             }
         }
 
@@ -204,6 +206,7 @@ namespace BlogPublisher.Domain
             S3BucketName = setting.S3BucketName;
             CloudFrontDistributionId = setting.CloudFrontDistributionId;
             PublishChangedFileOnly = setting.PublishChangedFileOnly;
+            PreviewBeforePublish = setting.PreviewBeforePublish;
         }
 
         private TSetting DeserializeSetting<TSetting>(string settingFile)

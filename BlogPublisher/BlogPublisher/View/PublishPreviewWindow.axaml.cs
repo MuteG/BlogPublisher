@@ -1,8 +1,9 @@
-using System.Windows;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
 
 namespace BlogPublisher.View;
 
-public partial class PublishPreviewWindow
+public partial class PublishPreviewWindow : Window
 {
     public PublishPreviewWindow()
     {
@@ -11,11 +12,11 @@ public partial class PublishPreviewWindow
     
     private void BtnYes_OnClick(object sender, RoutedEventArgs e)
     {
-        DialogResult = true;
+        Close(true);
     }
 
     private void BtnNo_OnClick(object sender, RoutedEventArgs e)
     {
-        DialogResult = false;
+        Close(false);
     }
 }

@@ -1,5 +1,6 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace BlogPublisher.Domain;
@@ -10,7 +11,7 @@ public class PublishFileCollection : IEnumerable<string>
 
     public PublishFileCollection(string publishFolder)
     {
-        PublishFolder = publishFolder.TrimEnd('\\');
+        PublishFolder = publishFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, '\\', '/');
     }
 
     public int Count => _files.Count;
@@ -39,7 +40,12 @@ public class PublishFileCollection : IEnumerable<string>
 
     private string GetInvalidationPath(string path)
     {
-        return path.Substring(PublishFolder.Length).Replace('\\', '/');
+        var rel = path.Substring(PublishFolder.Length).Replace('\\', '/');
+        if (!rel.StartsWith("/"))
+        {
+            rel = "/" + rel;
+        }
+        return rel;
     }
 
     public IEnumerator<string> GetEnumerator()

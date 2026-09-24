@@ -1,0 +1,22 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:model="using:BlogPublisher.ViewModel"
+        mc:Ignorable="d"
+        x:Class="BlogPublisher.View.PublishPreviewWindow"
+        x:DataType="model:PublishPreviewModel"
+        Title="发布预览" Height="300" Width="500" WindowStartupLocation="CenterOwner">
+    <Window.DataContext>
+        <model:PublishPreviewModel/>
+    </Window.DataContext>
+    <Grid RowDefinitions="*,40" Margin="10">
+        <ScrollViewer Grid.Row="0">
+            <TextBlock Text="{Binding PublishPaths}"/>
+        </ScrollViewer>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="10">
+            <Button Name="BtnYes" Content="发布" Width="80" HorizontalContentAlignment="Center" Click="BtnYes_OnClick"/>
+            <Button Name="BtnNo" Content="取消" Width="80" HorizontalContentAlignment="Center" Click="BtnNo_OnClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

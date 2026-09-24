@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -20,6 +20,11 @@ public class PublishFileJudge
         var setting = Setting.GetInstance();
         ResetPublishFolder(setting);
         var files = new PublishFileCollection(setting.PublishDirectory);
+        if (string.IsNullOrEmpty(setting.LocalBlogDirectory) || !Directory.Exists(setting.LocalBlogDirectory))
+        {
+            return files;
+        }
+
         foreach (var file in Directory.GetFiles(setting.LocalBlogDirectory, "*.*", SearchOption.AllDirectories))
         {
             if (_dict.ContainsKey(file))
@@ -59,7 +64,10 @@ public class PublishFileJudge
             foreach (var line in lines)
             {
                 var pair = line.Split(',');
-                dict[pair[0]] = pair[1];
+                if (pair.Length >= 2)
+                {
+                    dict[pair[0]] = pair[1];
+                }
             }
         }
             
@@ -78,24 +86,22 @@ public class PublishFileJudge
 
     private string GetHash(string file)
     {
-        var md5 = MD5.Create();
-        using (var stream = new FileStream(file, FileMode.Open, FileAccess.Read))
+        using var md5 = MD5.Create();
+        using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+        var hash = new StringBuilder();
+        foreach (var data in md5.ComputeHash(stream))
         {
-            var hash = new StringBuilder();
-            foreach (var data in md5.ComputeHash(stream))
-            {
-                hash.Append(data.ToString("X2"));
-            }
-                
-            return hash.ToString();
+            hash.Append(data.ToString("X2"));
         }
             
+        return hash.ToString();
     }
 
     private string MoveToPublishDirectory(string file)
     {
         var setting = Setting.GetInstance();
-        var publishFile = Path.Combine(setting.PublishDirectory, file.Substring(setting.LocalBlogDirectory.Length + 1));
+        var relativePath = Path.GetRelativePath(setting.LocalBlogDirectory, file);
+        var publishFile = Path.Combine(setting.PublishDirectory, relativePath);
         var publishFolder = Path.GetDirectoryName(publishFile);
         if (publishFolder != null && !Directory.Exists(publishFolder))
         {
@@ -109,6 +115,12 @@ public class PublishFileJudge
     private void SavePublishFileHashDictionary(Dictionary<string, string> dict)
     {
         var setting = Setting.GetInstance();
+        var folder = Path.GetDirectoryName(setting.PublishFileHashDictionary);
+        if (folder != null && !Directory.Exists(folder))
+        {
+            Directory.CreateDirectory(folder);
+        }
+
         File.WriteAllLines(setting.PublishFileHashDictionary,
             dict.Select(kv => $"{kv.Key},{kv.Value}"),
             Encoding.UTF8);
